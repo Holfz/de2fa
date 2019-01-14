@@ -1,20 +1,19 @@
 {
   "name": "de2fa",
-  "version": "1.0.1",
-  "main": "app.js",
+  "version": "2.0.0",
+  "description": "",
+  "main": "bot.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Holfz",
+  "author": "",
   "license": "ISC",
-  "description": "A Bot the Disable 2FA from steam account that use mail from inboxkitten.com",
   "dependencies": {
     "html-stringify": "0.0.3",
     "jsdom": "^13.1.0",
     "line-by-line": "^0.1.6",
-    "nightmare": "^3.0.1",
-    "nightmare-real-mouse": "^1.1.0",
     "request": "^2.88.0",
+    "steam-user": "^3.29.1",
     "wait-until": "0.0.2"
   }
 }
