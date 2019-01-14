@@ -48,10 +48,20 @@ function SteamLogin(username,password,mail) {
     var client = new SteamUser();
     client.setOption("promptSteamGuardCode", false);
 
-
+    console.log('[SteamLogin] Started Process with Steam Username:', username)
     client.logOn({
         "accountName": username,
         "password": password,
+    });
+
+    client.on('error', function(e) {
+        if(e.eresult == 5) {
+            console.log("[Steam] Error! Wrong Password..")
+            nexts = true;
+        } else {
+            console.log("[Steam] Steam error with code:", e.eresult);
+            nexts = true;
+        }
     });
     
     client.on('loggedOn', function(details) {
