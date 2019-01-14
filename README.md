@@ -1,4 +1,4 @@
-# Holfz De2FA (v.2.0.0)
+# Holfz De2FA (v.2.0.1)
 
 A Bot the Disable 2FA from steam account that use mail from inboxkitten.com
 
