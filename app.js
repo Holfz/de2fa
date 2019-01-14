@@ -1,28 +1,28 @@
-const Nightmare = require('nightmare')
-require('nightmare-real-mouse')(Nightmare);
+var SteamUser = require('steam-user'); 
+var request = require('request');
 const jsdom = require("jsdom");
 var htmlStringify = require('html-stringify');
 const { JSDOM } = jsdom;
-var nexts = false;
-var endfile = false;
-const author = 'Holfz';
-var request = require("request");
 var waitUntil = require('wait-until');
 var LineByLineReader = require('line-by-line'),
     lr = new LineByLineReader('accounts.txt');
 
-console.log(`...Welcome To ${author} 2FA InboxKitten Disabler...`);
-console.log('Starting Process...');
+
+const author = "Holfz";
+var nexts = false;
+var endfile = false;
+
 lr.on('line', function (line) {
     endfile = false
+    nexts = false
     console.log('[LBL] Reading Line And Send to RequestSteamGuardCode process.');
     lr.pause();
     var input = line;
     var inputsplit = input.split(":");
-    var id = inputsplit[0];
-    var pw = inputsplit[1];
-    var mail = id.toLowerCase();
-    RequestSteamGuardCode(id,pw,mail);
+    var username = inputsplit[0];
+    var password = inputsplit[1];
+    var mail = username.toLowerCase();
+    SteamLogin(username,password,mail);
     waitUntil()
     .interval(1000)
     .times(Infinity)
@@ -44,28 +44,70 @@ lr.on('end', function () {
 	console.log('[LBL] All lines are read, accounts.txt is closed now.')
 });
 
+function SteamLogin(username,password,mail) {
+    var client = new SteamUser();
+    client.setOption("promptSteamGuardCode", false);
 
-function RequestSteamGuardCode(id,pw,mail) {
-    var nightmare = Nightmare({ show: false }) // For Debug Set it to true
-    nexts = false;
-    console.log(`[RequestSteamGuardCode] Start Request Code By Logging in... | ID : ${id}`)
-    nightmare
-    .goto('https://store.steampowered.com/login/')
-    .wait('body')
-    .insert('#input_username', id)
-    .wait(1000)
-    .insert('#input_password', pw)
-    .click('button.btnv6_blue_hoverfade.btn_medium')
-    .then(() => {
+
+    client.logOn({
+        "accountName": username,
+        "password": password,
+    });
+    
+    client.on('loggedOn', function(details) {
+        console.log("[Steam] Logged into Steam as " + client.steamID);
+        client.setPersona(SteamUser.EPersonaState.Online);
+        nexts = false;
+    });
+    
+    client.on('disconnected', function(eresult,msg) {
+        nexts = true;
+        if(eresult == 3 || eresult == '3') {
+            console.log('[Steam] Disconnected')
+        } else {
+            console.log('[Steam] Disconnected from steam as result code', eresult)
+        }
+    });
+
+    client.on('steamGuard', function(domain, callback) {
+        console.log("[Steam] Steam Guard code needed from email ending in " + domain);
+        nexts = false;
         console.log('[ProcessWatchdog] Let\'s wait for 10 seconds')
         setTimeout(function(){ 
-            GetmailList(mail,nightmare)
+            GetMailList(mail,callback)
             console.log('[ProcessWatchdog] Sended to GetmailList Process...')
         }, 10000);
-    })
+    });
+
+    
+    client.on('webSession', (sessionID, cookies) => {
+        console.log('[Steam] WebSession Triggered');
+        let cookiejar = request.jar();
+        for (let arr of cookies) {
+            cookiejar.setCookie(arr, 'https://store.steampowered.com');
+        }
+        request({
+            method: 'POST',
+            uri: 'https://store.steampowered.com/twofactor/manage_action',
+            jar: cookiejar,
+            simple: false,
+            form: {
+                action: 'actuallynone',
+                sessionid: sessionID
+            }
+        }, function (error, response, body){
+            if(response.statusCode == 200 || !error) {
+                console.log('[Steam] Steam guard disabled....');
+                client.logOff();
+            } else {
+                console.log('[Steam] Error while disable steam guard... Please contact holfz or disable it by your self.');
+                client.logOff();
+            }
+        });
+    });
 }
 
-function GetmailList(mail,nightmare) {
+function GetMailList(mail,callback) {
     console.log('[InboxKitten-Parser] Got a Mail Request... Request to inboxkitten mail api...')
     var options = { method: 'GET',
             url: 'https://api.xforce.family/api/inboxkitten/GetList',
@@ -84,16 +126,15 @@ function GetmailList(mail,nightmare) {
             let urlcut = mailurl.replace(/(^\w+:|^)\/\//, '');
             let region = urlcut.split(".")[0];
             let combine = `${region}-${mailkey}`;
-            GetSteamGuardCode(combine,nightmare);
+            GetSteamGuardCode(combine,callback);
         } else {
             console.log('[GetSteamGuardCode] Can\'t Contact API Server..')
-            nightmare.end();
-            nexts = true;
+            client.logOff();
         }
     });
 }
     
-function GetSteamGuardCode(key,nightmare) {
+function GetSteamGuardCode(key,callback) {
         console.log('[GetSteamGuardCode] Got a Code Request... Request to inboxkitten mail api...')
         var options = { method: 'GET',
             url: 'https://api.xforce.family/api/inboxkitten/GetMail',
@@ -112,62 +153,16 @@ function GetSteamGuardCode(key,nightmare) {
             const dom = new JSDOM(Stringify);
             if(dom.window.document.querySelector("[style=\"font-size: 24px; color: #66c0f4; font-family: Arial, Helvetica, sans-serif; font-weight: bold;\"]") == null) {
                 console.log('[DisableSteamGuardCode] Can\'t find Steam Guard Code. Possible Steam Guard Already disable. Ending...')
-                nexts = true;
-                return nightmare.end();
+                client.logOff();
             }
             let SGCode = dom.window.document.querySelector("[style=\"font-size: 24px; color: #66c0f4; font-family: Arial, Helvetica, sans-serif; font-weight: bold;\"]").textContent;
             console.log('[GetSteamGuardCode] Got Steam Guard Code, Code:',SGCode)
-            console.log('[GetSteamGuardCode] Continue Next Phase (DisableSteamGuardCode)')
-            DisableSteamGuardCode(SGCode,nightmare)
+            console.log('[GetSteamGuardCode] Call Back To Steam')
+            let fuckspace = SGCode.replace(/\s/g, ''); // FUCK THE SPACE
+            callback(fuckspace)
         } else {
             console.log('[GetSteamGuardCode] Can\'t Contact API Server..')
-            nightmare.end();
-            nexts = true;
+            client.logOff();
         }
     });
-}
-
-function DisableSteamGuardCode(Code,nightmare) {
-    console.log('[DisableSteamGuardCode] Code Got. Start Filling And Disable Steam Guard...')
-    nightmare
-    .wait(3000)
-    .evaluate(function() {
-        return document.querySelector('#twofactorcode_entry');
-    })
-    .then(function(fa) {
-        if (fa != null || fa != undefined) {
-            nightmare
-			.type('#twofactorcode_entry', Code)
-			 .type('body', '\u000d') // press enter
-			 .wait(1000)
-			 .realMouseover('#success_continue_btn')
-             .realClick('#success_continue_btn')
-			 .wait(3000)
-			 .goto('https://store.steampowered.com/twofactor/manage')
-             .wait('#none_authenticator_check')
-             .realClick('#none_authenticator_check')
-             .wait(1000)
-             .evaluate(function() {
-                return document.querySelector('.btnv6_green_white_innerfade.btn_medium.button');
-             })
-            .then(function(continuebtn) {
-               if (continuebtn != null || continuebtn != undefined) {
-                nexts = true;
-                 nightmare
-                 .realMouseover('.btnv6_green_white_innerfade.btn_medium.button')
-                 .realClick('.btnv6_green_white_innerfade.btn_medium.button')
-                 .end()
-                 .then(console.log('[DisableSteamGuardCode] Done.'))
-               } else {
-                 console.log('[DisableSteamGuardCode] Can\'t find confirm button. Possible Steam Guard Already disable. Ending...')
-                 nexts = true;
-                 nightmare.end();
-                }
-            })
-        } else {
-            console.log('[DisableSteamGuardCode] Can\'t find input for steam guard code. Ending...')
-            nexts = true;
-            return nightmare.end();
-        }
-    })
 }
