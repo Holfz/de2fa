@@ -1,18 +1,20 @@
-# Holfz De2FA (v.2.0.1)
+# Holfz De2FA (v.2.0.2)
 
 A Bot the Disable 2FA from steam account that use mail from inboxkitten.com
 
 # How to use ?
 ### First Time
-	1.Put account info in accounts.txt (user:pass format)
+	1.Put account info in ./account/accounts.txt (user:pass format)
 	2.Open cmd on the folder that de2fa was at
 	3.Type npm install
 	4.Type node app.js
+	5.Your account will separate as Wrong Password , error will be in error.txt and Success will be in success.txt
 ### Next Time
-	1.Put account info in accounts.txt (user:pass format)
+	1.Put account info in ./account/accounts.txt (user:pass format)
 	2.Open cmd on the folder that de2fa was at
 	3.Type node app.js
-
+	4.Your account will separate as Wrong Password , error will be in error.txt and Success will be in success.txt
+	
 ## Contributing
 
 All contributions are welcome
