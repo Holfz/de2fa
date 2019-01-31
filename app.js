@@ -1,11 +1,12 @@
 var SteamUser = require('steam-user'); 
 var request = require('request');
+var fs = require('fs');
 const jsdom = require("jsdom");
 var htmlStringify = require('html-stringify');
 const { JSDOM } = jsdom;
 var waitUntil = require('wait-until');
 var LineByLineReader = require('line-by-line'),
-    lr = new LineByLineReader('accounts.txt');
+    lr = new LineByLineReader('./account/accounts.txt');
 
 
 const author = "Holfz";
@@ -58,9 +59,15 @@ function SteamLogin(username,password,mail) {
         if(e.eresult == 5) {
             console.log("[Steam] Error! Wrong Password..")
             nexts = true;
+            fs.appendFile('./account/result/error.txt', `${username}:${password}`, function (err) {
+                if (err) throw err;
+            });
         } else {
             console.log("[Steam] Steam error with code:", e.eresult);
             nexts = true;
+            fs.appendFile('./account/result/error.txt', `${username}:${password}`, function (err) {
+                if (err) throw err;
+            });
         }
     });
     
@@ -74,8 +81,14 @@ function SteamLogin(username,password,mail) {
         nexts = true;
         if(eresult == 3 || eresult == '3') {
             console.log('[Steam] Disconnected')
+            fs.appendFile('./account/result/success.txt', `${username}:${password}`, function (err) {
+                if (err) throw err;
+            });
         } else {
             console.log('[Steam] Disconnected from steam as result code', eresult)
+            fs.appendFile('./account/result/error.txt', `${username}:${password}`, function (err) {
+                if (err) throw err;
+            });
         }
     });
 
