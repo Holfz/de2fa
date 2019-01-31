@@ -8,12 +8,12 @@ A Bot the Disable 2FA from steam account that use mail from inboxkitten.com
 	2.Open cmd on the folder that de2fa was at
 	3.Type npm install
 	4.Type node app.js
-	5.Your account will separate as Wrong Password , error will be in error.txt and Success will be in success.txt
+	5.Your account will separate as Wrong Password , error will be in ./account/result/error.txt and Success will be in ./account/result/success.txt
 ### Next Time
 	1.Put account info in ./account/accounts.txt (user:pass format)
 	2.Open cmd on the folder that de2fa was at
 	3.Type node app.js
-	4.Your account will separate as Wrong Password , error will be in error.txt and Success will be in success.txt
+	4.Your account will separate as Wrong Password , error will be in ./account/result/error.txt and Success will be in ./account/result/success.txt
 	
 ## Contributing
 
