@@ -59,13 +59,13 @@ function SteamLogin(username,password,mail) {
         if(e.eresult == 5) {
             console.log("[Steam] Error! Wrong Password..")
             nexts = true;
-            fs.appendFile('./account/result/error.txt', `${username}:${password}`, function (err) {
+            fs.appendFile('./account/result/error.txt', `${username}:${password}` + '\r\n', function (err) {
                 if (err) throw err;
             });
         } else {
             console.log("[Steam] Steam error with code:", e.eresult);
             nexts = true;
-            fs.appendFile('./account/result/error.txt', `${username}:${password}`, function (err) {
+            fs.appendFile('./account/result/error.txt', `${username}:${password}` + '\r\n', function (err) {
                 if (err) throw err;
             });
         }
@@ -81,12 +81,12 @@ function SteamLogin(username,password,mail) {
         nexts = true;
         if(eresult == 3 || eresult == '3') {
             console.log('[Steam] Disconnected')
-            fs.appendFile('./account/result/success.txt', `${username}:${password}`, function (err) {
+            fs.appendFile('./account/result/success.txt', `${username}:${password}`+ '\r\n', function (err) {
                 if (err) throw err;
             });
         } else {
             console.log('[Steam] Disconnected from steam as result code', eresult)
-            fs.appendFile('./account/result/error.txt', `${username}:${password}`, function (err) {
+            fs.appendFile('./account/result/error.txt', `${username}:${password}`+ '\r\n', function (err) {
                 if (err) throw err;
             });
         }
